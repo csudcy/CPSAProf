@@ -2,6 +2,7 @@
 Example of how to setup a cherrypy/sqlalchemy profiler
 """
 import logging
+import os
 
 import cherrypy
 
@@ -11,6 +12,8 @@ from .profilers.cpprofiler import CPProfiler
 
 logger = logging.getLogger(__name__)
 
+HERE = os.path.dirname(os.path.abspath(__file__))
+STATIC = os.path.join(HERE, 'static')
 
 class CPSA(object):
     def __init__(self):
@@ -20,7 +23,10 @@ class CPSA(object):
 
     @cherrypy.expose
     def index(self):
-        return 'TODO: Return a nice frontend'
+        return cherrypy.lib.static.serve_file(
+            os.path.join(STATIC, 'cpsa.html'),
+            # content_type='application/xml'
+        )
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
@@ -35,6 +41,10 @@ def mount(prefix='/cpsa/'):
         config={
             '/': {
                 'tools.cpprofiler.on': False,
+            },
+            '/static': {
+                'tools.staticdir.on': True,
+                'tools.staticdir.dir': STATIC,
             }
         }
     )
