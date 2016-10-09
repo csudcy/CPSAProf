@@ -33,8 +33,8 @@ def mount(prefix='/cpsa/'):
         CPSA(),
         '/cpsa/',
         config={
-            '/cpsa/': {
-                'tools.cpprofile.on': False,
+            '/': {
+                'tools.cpprofiler.on': False,
             }
         }
     )
