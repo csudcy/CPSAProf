@@ -26,3 +26,15 @@ class CPSA(object):
     @cherrypy.tools.json_out()
     def data(self, id):
         return self._publisher.get_client_data(id)
+
+
+def mount(prefix='/cpsa/'):
+    cherrypy.tree.mount(
+        CPSA(),
+        '/cpsa/',
+        config={
+            '/cpsa/': {
+                'tools.cpprofile.on': False,
+            }
+        }
+    )

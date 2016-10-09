@@ -5,7 +5,7 @@ import cherrypy
 from cp_sqlalchemy import SQLAlchemyTool, SQLAlchemyPlugin
 
 from . import models
-from .saprofile.cpsa import CPSA
+from .saprofile import cpsa
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -85,9 +85,6 @@ def run_server():
             }
         }
     )
-    cherrypy.tree.mount(
-        CPSA(),
-        '/cpsa/'
-    )
+    cpsa.mount()
     cherrypy.engine.start()
     cherrypy.engine.block()

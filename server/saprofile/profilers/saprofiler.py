@@ -24,14 +24,7 @@ class SAProfiler(object):
                 executemany
             ):
             logger.debug('before_cursor_execute')
-            self._publisher.publish_sql(
-                id(context),
-                {
-                    'request_id': self._get_current_request_id(),
-                    'statement': statement,
-                    'parameters': parameters,
-                }
-            )
+            self._publish(context, statement, parameters)
 
         @event.listens_for(Engine, 'after_cursor_execute')
         def after_cursor_execute(
@@ -43,16 +36,17 @@ class SAProfiler(object):
                 executemany
             ):
             logger.debug('after_cursor_execute')
-            self._publisher.publish_sql(
-                id(context),
-                {
-                    'request_id':self._get_current_request_id(),
-                    'statement':statement,
-                    'parameters':parameters,
-                    'row_count':None,
-                    'result_size':None,
-                }
-            )
+            self._publish(context, statement, parameters)
+
+    def _publish(self, context, statement, parameters):
+        self._publisher.publish_sql(
+            id(context),
+            {
+                'request_id':self._get_current_request_id(),
+                'statement':statement,
+                'parameters':parameters
+            }
+        )
 
     def _get_current_request_id(self):
         if self._request_profiler:
