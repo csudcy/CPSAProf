@@ -1,25 +1,35 @@
 """
 Data store for anything used for by CP-SA-profiler
 """
+import logging
 import time
+
+logger = logging.getLogger(__name__)
 
 
 class TimeStore(object):
-    def __init__(self):
+    def __init__(self, type, cleanup_frequency_s=60, max_age_s=10*60):
+        self._type = type
+        self._cleanup_frequency_s = cleanup_frequency_s
+        self._max_age_s = max_age_s
         self._store = {}
         self._last_cleanup = 0
 
     def update(self, id, data):
         if id not in self._store:
+            # New record; add it
             self._store[id] = {
                 'id': id,
+                'type': self._type,
                 'data': data,
                 'created': time.time(),
                 'updated': time.time(),
             }
         else:
+            # Existing record; update it
             self._store[id]['data'] = self._update_data(self._store[id]['data'], data)
             self._store[id]['updated'] = time.time()
+
         # Return whatever the latest version of the record is
         return self._store[id]
 
@@ -32,27 +42,33 @@ class TimeStore(object):
     def get(self, id):
         return self._store.get(id)
 
-    def periodic_cleanup(self, cleanup_frequency_s=60):
-        if time.time() > self._last_cleanup + cleanup_frequency_s:
+    def get_all(self):
+        return self._store.values()
+
+    def has(self, id):
+        return id in self._store
+
+    def periodic_cleanup(self):
+        if time.time() > self._last_cleanup + self._cleanup_frequency_s:
             self.cleanup()
 
-    def old_keys(self, max_age_s=10*60):
+    def old_keys(self):
         """
-        Find any keys which haven't been updated for max_age_ms
+        Find any keys which haven't been updated recently
         """
-        minimum_updated = time.time() - max_age_s
-        return (
+        minimum_updated = time.time() - self._max_age_s
+        return [
             k
-            for k, v in self._store.iterkeys()
+            for k, v in self._store.iteritems()
             if v['updated'] < minimum_updated
-        )
+        ]
 
-    def cleanup(self, max_age_s=10*60):
+    def cleanup(self):
         """
-        Remove any records which haven't been updated for max_age_ms
+        Remove any records which haven't been updated recently
         """
         self._last_cleanup = time.time()
-        for k in self.old_keys(max_age_s):
+        for k in self.old_keys():
             del self._store[k]
 
 
@@ -67,9 +83,8 @@ class ListTimeStore(TimeStore):
         old_data.append(new_data)
         return old_data
 
-
-class ListQueueTimeStore(ListTimeStore):
-    def get(self, id):
-        data = super(self, ListQueueTimeStore).get(id)
-        self._store[id]['data'] = []
-        return self._store.get(id)
+    def pop_data(self, id):
+        if id in self._store:
+            data = self._store[id]['data']
+            self._store[id]['data'] = []
+            return data

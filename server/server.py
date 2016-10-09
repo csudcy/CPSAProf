@@ -1,3 +1,4 @@
+import logging
 import os
 
 import cherrypy
@@ -44,8 +45,15 @@ class Root(object):
 
 
 def run():
+    setup_logging()
     init_db()
     run_server()
+
+
+def setup_logging():
+    logging.basicConfig()
+    logging.getLogger('server.saprofile').setLevel(logging.DEBUG)
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
 
 
 def init_db():

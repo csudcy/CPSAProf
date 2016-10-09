@@ -1,11 +1,15 @@
 """
 Example of how to setup a cherrypy/sqlalchemy profiler
 """
+import logging
+
+import cherrypy
 
 from .publisher import Publisher
 from .profilers.saprofiler import SAProfiler
 from .profilers.cpprofiler import CPProfiler
 
+logger = logging.getLogger(__name__)
 
 
 class CPSA(object):
@@ -19,6 +23,6 @@ class CPSA(object):
         return 'TODO: Return a nice frontend'
 
     @cherrypy.expose
+    @cherrypy.tools.json_out()
     def data(self, id):
-         return self._publisher.get_client_data(id)
-
+        return self._publisher.get_client_data(id)

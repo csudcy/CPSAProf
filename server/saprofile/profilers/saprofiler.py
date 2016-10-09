@@ -1,9 +1,14 @@
+import logging
+
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
 
+logger = logging.getLogger(__name__)
+
 
 class SAProfiler(object):
-    def __init_(self, publisher, request_profiler=None):
+    def __init__(self, publisher, request_profiler=None):
+        logger.debug('__init__')
         self._publisher = publisher
         self._request_profiler = request_profiler
         self._register_events()
@@ -18,6 +23,7 @@ class SAProfiler(object):
                 context,
                 executemany
             ):
+            logger.debug('before_cursor_execute')
             self._publisher.publish_sql(
                 id(context),
                 {
@@ -36,6 +42,7 @@ class SAProfiler(object):
                 context,
                 executemany
             ):
+            logger.debug('after_cursor_execute')
             self._publisher.publish_sql(
                 id(context),
                 {
