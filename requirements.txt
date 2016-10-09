@@ -1,0 +1,3 @@
+cherrypy==8.1.2
+sqlalchemy==1.0.15
+cherrypy-sqlalchemy==0.5.2
