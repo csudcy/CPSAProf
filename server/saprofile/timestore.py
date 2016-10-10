@@ -48,6 +48,9 @@ class TimeStore(object):
     def has(self, id):
         return id in self._store
 
+    def remove(self, id):
+        del self._store[id]
+
     def periodic_cleanup(self):
         if time.time() > self._last_cleanup + self._cleanup_frequency_s:
             self.cleanup()
@@ -69,7 +72,7 @@ class TimeStore(object):
         """
         self._last_cleanup = time.time()
         for k in self.old_keys():
-            del self._store[k]
+            self.remove(k)
 
 
 class DictTimeStore(TimeStore):

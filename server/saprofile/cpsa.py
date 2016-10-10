@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 HERE = os.path.dirname(os.path.abspath(__file__))
 STATIC = os.path.join(HERE, 'static')
 
+
 class CPSA(object):
     def __init__(self):
         self._publisher = Publisher()
@@ -27,6 +28,16 @@ class CPSA(object):
             os.path.join(STATIC, 'cpsa.html'),
             # content_type='application/xml'
         )
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def register(self, include_existing_data=False):
+        return self._publisher.add_client(include_existing_data)
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def unregister(self, id):
+        return self._publisher.remove_client(id)
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
