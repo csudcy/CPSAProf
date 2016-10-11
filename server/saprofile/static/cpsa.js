@@ -1,47 +1,48 @@
 /*global $*/
 
-function CPSAClient() {
+function add_events(target, event_list) {
     // Event system
-    var events = {
-        start: $.Callbacks(),
-        stop: $.Callbacks(),
-        clear: $.Callbacks(),
-        newData: $.Callbacks()
-    };
-    var publish = function(event, data) {
+    var events = {};
+    event_list.forEach(function(event) {
+        events[event] = $.Callbacks();
+    });
+    target.prototype.publish = function(event, data) {
         events[event].fire(data);
-    }.bind(this);
-    this.subscribe = function(event, callback) {
+    };
+    target.prototype.subscribe = function(event, callback) {
         events[event].add(callback);
     };
-    this.unsubscribe = function(event, callback) {
+    target.prototype.unsubscribe = function(event, callback) {
         events[event].remove(callback);
     };
+}
 
 
-    // Private data system
-    var client_id;
+function CPSAClient() {
+    this._client_id = undefined;
 
-    var fetch_data = function() {
+    this._fetch_data = function() {
         if (this.is_running()) {
             $.getJSON(
                 'data',
-                {id: client_id},
-                parse_data
+                {id: this._client_id},
+                this._parse_data
             );
         }
     }.bind(this);
 
-    var parse_data = function(data, textStatus, jqXHR) {
-        publish('newData', data);
-        setTimeout(fetch_data.bind(this), 1000);
+    this._parse_data = function(data, textStatus, jqXHR) {
+        if (data) {
+            data.forEach(function(record) {
+                this.publish('newRecord', record);
+            }.bind(this));
+        }
+        setTimeout(this._fetch_data, 1000);
     }.bind(this);
 
-
-    // Data system
     this.is_running = function() {
-        return client_id !== undefined;
-    };
+        return this._client_id !== undefined;
+    }.bind(this);
 
     this.start = function() {
         if (this.is_running()) {
@@ -52,10 +53,13 @@ function CPSAClient() {
         // Register a new client & start recording
         $.getJSON(
             'register',
+            {
+                'include_existing_data': true
+            },
             function(data, textStatus, jqXHR) {
-                client_id = data;
-                publish('start');
-                fetch_data.call(this);
+                this._client_id = data;
+                this.publish('start');
+                this._fetch_data();
             }.bind(this)
         );
     }.bind(this);
@@ -69,26 +73,66 @@ function CPSAClient() {
         // Unregister myself & stop recording
         $.getJSON(
             'unregister',
-            {id: client_id},
+            {id: this._client_id},
             function(data, textStatus, jqXHR) {
-                client_id = undefined;
-                publish('stop');
+                this._client_id = undefined;
+                this.publish('stop');
             }.bind(this)
         );
     }.bind(this);
+}
+add_events(CPSAClient, ['start', 'stop', 'newRecord']);
+
+function CPSADataStore() {
+    this._store = {
+        sql: {},
+        request: {}
+    };
+
+    this._on_newRecord = function(record) {
+        if (this._store[record.type][record.id] === undefined) {
+            // This record is new, just add it
+            this._store[record.type][record.id] = record;
+            this.publish('add', record);
+        } else {
+            // Check this record is newer than the one we currently have
+            if (record.updated < this._store[record.type][record.id].updated) {
+                this._store[record.type][record.id] = record;
+                this.publish('update', record);
+            }
+        }
+    }.bind(this);
+
+    this.listen = function(cpsa_client) {
+        cpsa_client.subscribe('newRecord', this._on_newRecord);
+    }.bind(this);
 
     this.clear = function() {
-        // TODO: Clear stored data
-        publish('clear');
+        Object.keys(this._store).forEach(function(key) {
+            this._store[key] = {};
+        }.bind(this));
+        this.publish('clear');
+    }.bind(this);
+
+    this.get = function(type, id) {
+        return this._store[type][id];
+    }.bind(this);
+
+    this.get_all = function(type) {
+        return this._store[type];
     }.bind(this);
 }
+add_events(CPSADataStore, ['add', 'update', 'clear']);
 
-var cpsa_client = new CPSAClient();
+var cpsa_client = new CPSAClient(),
+    cpsa_datastore = new CPSADataStore();
+
+cpsa_datastore.listen(cpsa_client);
 
 $(function() {
     $('#start').click(cpsa_client.start);
     $('#stop').click(cpsa_client.stop);
-    $('#clear').click(cpsa_client.clear);
+    $('#clear').click(cpsa_datastore.clear);
 
     cpsa_client.subscribe('start', function() {
         console.log('start');
@@ -102,15 +146,20 @@ $(function() {
         $('#stop').prop("disabled", true);
     });
 
-    cpsa_client.subscribe('clear', function() {
+    cpsa_datastore.subscribe('clear', function() {
         console.log('clear');
         $('#clear').prop("disabled", true);
     });
 
-    cpsa_client.subscribe('newData', function(data) {
-        console.log('newData');
+    cpsa_datastore.subscribe('add', function(data) {
+        console.log('add');
         console.log(data);
         $('#clear').prop("disabled", false);
+    });
+
+    cpsa_datastore.subscribe('update', function(data) {
+        console.log('update');
+        console.log(data);
     });
 });
 
