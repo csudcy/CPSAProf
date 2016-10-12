@@ -36,7 +36,7 @@ class Root(object):
         # Hack some HTML together
         page = self.page()
         ol = ['<ol>']
-        print cherrypy.request.db.query(models.LogMessage).count()
+        print cherrypy.request.db.query(models.LogMessage).filter(models.LogMessage.id > 0).count()
         for msg in cherrypy.request.db.query(models.LogMessage).all():
             ol.append('<li>%s</li>' % msg.value)
         ol.append('</ol>')

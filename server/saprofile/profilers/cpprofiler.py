@@ -38,6 +38,7 @@ class CPProfiler(object):
 
     def _publish(self):
         url = cherrypy.request.path_info
+        print '_publish', url
         if url in self._exclude:
             return
 
@@ -47,7 +48,7 @@ class CPProfiler(object):
         except Exception:
             response_body_length = None
 
-        self._publisher.publish_sql(
+        self._publisher.publish_request(
             self.get_current_id(),
             {
                 'request': {
