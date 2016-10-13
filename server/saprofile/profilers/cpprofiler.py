@@ -24,7 +24,8 @@ class CPProfilerTool(cherrypy.Tool):
 
 
 class CPProfiler(object):
-    def __init__(self, publisher, exclude=('/favicon.ico', )):
+    def __init__(self, generate_id, publisher, exclude=('/favicon.ico', )):
+        self._generate_id = generate_id
         self._publisher = publisher
         self._exclude = exclude
         self._register_events()
@@ -66,4 +67,4 @@ class CPProfiler(object):
         )
 
     def get_current_id(self):
-        return id(cherrypy.request)
+        return self._generate_id(cherrypy.request)

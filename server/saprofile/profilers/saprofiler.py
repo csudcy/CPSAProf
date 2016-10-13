@@ -7,8 +7,9 @@ logger = logging.getLogger(__name__)
 
 
 class SAProfiler(object):
-    def __init__(self, publisher, request_profiler=None):
+    def __init__(self, generate_id, publisher, request_profiler=None):
         logger.debug('__init__')
+        self._generate_id = generate_id
         self._publisher = publisher
         self._request_profiler = request_profiler
         self._register_events()
@@ -40,7 +41,7 @@ class SAProfiler(object):
 
     def _publish(self, context, statement, parameters):
         self._publisher.publish_sql(
-            id(context),
+            self._generate_id(context),
             {
                 'request_id':self._get_current_request_id(),
                 'statement':statement,

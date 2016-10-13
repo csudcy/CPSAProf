@@ -1,5 +1,19 @@
 /*global $*/
 
+// Object.values shim
+if (Object.values === undefined) {
+    Object.values = function(obj) {
+        var keys = Object.keys(obj),
+            length = keys.length,
+            values = Array(length);
+        for (var i=0; i<length; i++) {
+            values[i] = obj[keys[i]];
+        }
+        return values;
+    };
+}
+
+
 function add_events(target, event_list) {
     // Event system
     var events = {};
@@ -90,17 +104,59 @@ function CPSADataStore() {
     };
 
     this._on_new_record = function(record) {
+        // Add calculated fields
+        record.duration = record.updated - record.created;
+        record.order = null;
+        record.relative_created = null;
+
         if (this._store[record.type][record.id] === undefined) {
-            // This record is new, just add it
-            this._store[record.type][record.id] = record;
-            this.publish('add_' + record.type, record);
+            this._add_record(record);
         } else {
-            // Check this record is newer than the one we currently have
-            if (record.updated < this._store[record.type][record.id].updated) {
-                this._store[record.type][record.id] = record;
-                this.publish('update_' + record.type, record);
-            }
+            this._update_record(record);
         }
+    }.bind(this);
+
+    this._add_record = function(record) {
+        // record.order = Object.keys(this._store[record.type]).length + 1;
+        this._store[record.type][record.id] = record;
+        console.log('add', record.id, record.order);
+        this.publish('add_' + record.type, record);
+        this._update_orders(record.type);
+    }.bind(this);
+
+    this._update_record = function(record) {
+        // Check this record is newer than the one we currently have
+        if (record.updated >= this._store[record.type][record.id].updated) {
+            return;
+        }
+        // record.order = this._store[record.type][record.id].order;
+        this._store[record.type][record.id] = record;
+        console.log('update', record.id, record.order);
+        this.publish('update_' + record.type, record);
+        this._update_orders(record.type);
+    }.bind(this);
+
+    this._update_orders = function(type) {
+        // Update the order attibute of all rows
+        console.log('_update_orders', type);
+        var records = Object.values(this._store[type]);
+        records.sort(function (a, b){
+            return a.created - b.created;
+        });
+        var min_created = records[0].created;
+        records.forEach(function(record, index) {
+            var order = index + 1,
+                relative_created = record.created - min_created;
+            if (record.order !== order || record.relative_created !== relative_created) {
+                // console.log('Order update', record.order, order);
+                record.order = order;
+                record.relative_created = relative_created;
+                this.publish('update_' + type, record);
+            }
+        }.bind(this));
+        records.forEach(function(record, index) {
+            console.log(index, record.id, record.order, record.relative_created);
+        });
     }.bind(this);
 
     this.listen = function(cpsa_client) {
@@ -119,7 +175,7 @@ function CPSADataStore() {
     }.bind(this);
 
     this.get_all = function(type) {
-        return this._store[type];
+        return Object.values(this._store[type]);
     }.bind(this);
 }
 add_events(CPSADataStore, ['add_sql', 'add_request', 'update_sql', 'update_request', 'clear']);
@@ -135,27 +191,28 @@ function CPSASqlAggregator() {
         cpsa_datastore.subscribe('clear', this._on_clear);
     }.bind(this);
 
-    this._on_add_or_update_sql = function(data) {
+    this._on_add_or_update_sql = function(record) {
         // Only add records when they are complete i.e. when updated > created
-        if (data.updated > data.created) {
-            if (this._aggregated_ids[data.id] !== undefined) {
-                console.log('Updated SQL record has already been aggregated:', data);
+        if (record.duration === 0) {
+            if (this._aggregated_ids[record.id] !== undefined) {
+                console.log('Updated SQL record has already been aggregated:', record);
             } else {
                 // Add this record to our aggregated store now
-                console.log('Aggregating SQL record:', data);
-                this._aggregated_ids[data.id] = true;
-                // TODO: Aggregate data
+                console.log('Aggregating SQL record:', record);
+                this._aggregated_ids[record.id] = true;
+                // TODO: Aggregate record
             }
         } else {
-            console.log('Unfinished SQL record ignored:', data);
+            console.log('Unfinished SQL record ignored:', record);
         }
     }.bind(this);
 
     this._on_clear = function() {
         this._store = {};
-        this._publish('clear');
+        this.publish('clear');
     }.bind(this);
 }
+add_events(CPSASqlAggregator, ['add', 'update', 'clear']);
 
 
 function CPSASqlView() {
@@ -175,8 +232,7 @@ function CPSASqlView() {
     }.bind(this);
 
     this._on_update_sql = function(data) {
-        console.log('TODO: _on_update_sql');
-        this._datatable.row(data.id).data(data);
+        this._datatable.row('#' + data.id).data(data);
         this._datatable.draw();
     }.bind(this);
 
@@ -186,6 +242,9 @@ function CPSASqlView() {
     }.bind(this);
 
     this.display = function(container) {
+        function nice_duration_seconds(seconds) {
+            return (Math.floor(seconds * 100) / 100.0) + 's';
+        }
         this._container = container;
         this._datatable = this._container.DataTable({
             data: this._cpsa_datastore.get('sql'),
@@ -195,12 +254,21 @@ function CPSASqlView() {
             columns: [
                 {
                     title: 'Index',
-                    render: function(data, type, row, meta) {
-                        if (type == 'type') {
-                            return 'integer';
-                        }
-                        return meta.row;
-                    }
+                    data: 'order'
+                },
+                {
+                    title: 'Id',
+                    data: 'id'
+                },
+                {
+                    title: 'Created',
+                    data: 'relative_created',
+                    render: {display: nice_duration_seconds}
+                },
+                {
+                    title: 'Duration',
+                    data: 'duration',
+                    render: {display: nice_duration_seconds}
                 },
                 {
                     title: 'Query',
@@ -209,19 +277,6 @@ function CPSASqlView() {
                 {
                     title: 'Parameters',
                     data: 'data.parameters[, ]'
-                },
-                {
-                    title: 'Duration',
-                    render: function(data, type, row, meta) {
-                        var duration = row.updated - row.created;
-                        if (type == 'type') {
-                            return 'float';
-                        }
-                        if (type == 'filter' || type == 'sort') {
-                            return duration;
-                        }
-                        return duration + 'ms';
-                    }
                 },
                 {
                     title: 'Request',

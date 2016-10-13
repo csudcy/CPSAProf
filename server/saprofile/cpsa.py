@@ -1,6 +1,7 @@
 """
 Example of how to setup a cherrypy/sqlalchemy profiler
 """
+import hashlib
 import logging
 import os
 
@@ -16,11 +17,15 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 STATIC = os.path.join(HERE, 'static')
 
 
+def generate_id(obj):
+    return hashlib.md5(str(id(obj))).hexdigest()[:6]
+
+
 class CPSA(object):
     def __init__(self):
         self._publisher = Publisher()
-        self._cp_profiler = CPProfiler(self._publisher)
-        self._sa_profiler = SAProfiler(self._publisher, self._cp_profiler)
+        self._cp_profiler = CPProfiler(generate_id, self._publisher)
+        self._sa_profiler = SAProfiler(generate_id, self._publisher, self._cp_profiler)
 
     @cherrypy.expose
     def index(self):

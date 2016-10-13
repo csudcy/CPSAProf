@@ -4,9 +4,9 @@ A live profiling tool for cherrypy &amp; sqlalchemy
 
 ## TODO
 
-* Request id doesn't seem to change
+* Backend:
+  * Request id doesn't change
 * Frontend
-  * SQL ordering seems wrong
   * Request display
   * Display switching
   * SQL aggregating
@@ -20,3 +20,6 @@ A live profiling tool for cherrypy &amp; sqlalchemy
       * Link to request
     * Grouped SQL
       * Expand to see SQL?
+  * Stop on error
+  * Choose to start with or without old data
+  * Pause?
