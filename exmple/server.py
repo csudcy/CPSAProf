@@ -3,9 +3,9 @@ import os
 
 import cherrypy
 from cp_sqlalchemy import SQLAlchemyTool, SQLAlchemyPlugin
+from cpsaprof import cpsa
 
 from . import models
-from .saprofile import cpsa
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
