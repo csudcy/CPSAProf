@@ -226,18 +226,21 @@ function CPSAViewFactory(type, settings_function) {
             if (this._datatable === undefined) return;
             this._datatable.row.add(data);
             this._datatable.draw();
+            this._datatable.columns.adjust();
         }.bind(this);
 
         this._on_update_data = function(data) {
             if (this._datatable === undefined) return;
             this._datatable.row('#' + data.id).data(data);
             this._datatable.draw();
+            this._datatable.columns.adjust();
         }.bind(this);
 
         this._on_clear = function() {
             if (this._datatable === undefined) return;
             this._datatable.clear();
             this._datatable.draw();
+            this._datatable.columns.adjust();
         }.bind(this);
 
         this.display = function(container) {
@@ -263,11 +266,12 @@ function CPSAViewFactory(type, settings_function) {
 }
 
 
-function CPSASqlViewSettings() {
-    function nice_duration_seconds(seconds) {
-        return (Math.floor(seconds * 100) / 100.0) + 's';
-    }
+function nice_duration_seconds(seconds) {
+    return (Math.floor(seconds * 100) / 100.0) + 's';
+}
 
+
+function CPSASqlViewSettings() {
     return {
         data: this._cpsa_datastore.get_all('sql'),
         rowId: 'id',
@@ -305,9 +309,6 @@ var CPSASqlView = CPSAViewFactory('sql', CPSASqlViewSettings);
 
 
 function CPSARequestViewSettings() {
-    function nice_duration_seconds(seconds) {
-        return (Math.floor(seconds * 100) / 100.0) + 's';
-    }
     return {
         data: this._cpsa_datastore.get_all('request'),
         rowId: 'id',
@@ -328,17 +329,22 @@ function CPSARequestViewSettings() {
                 title: 'Duration',
                 data: 'duration',
                 render: {display: nice_duration_seconds}
-            },
-            // {
-            //     title: 'Query',
-            //     data: 'data.statement'
-            // }, {
-            //     title: 'Parameters',
-            //     data: 'data.parameters[, ]'
-            // }, {
-            //     title: 'Request',
-            //     data: 'data.request_id'
-            // },
+            }, {
+                title: 'URL',
+                data: 'data.request.url'
+            }, {
+                title: 'Remote IP',
+                data: 'data.request.ip'
+            }, {
+                title: 'Method',
+                data: 'data.request.method'
+            }, {
+                title: 'Size',
+                data: 'data.response.body_length'
+            }, {
+                title: 'Status',
+                data: 'data.response.status'
+            }
         ]
     };
 }

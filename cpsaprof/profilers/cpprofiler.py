@@ -67,4 +67,6 @@ class CPProfiler(object):
         )
 
     def get_current_id(self):
-        return self._generate_id(cherrypy.request)
+        # The cherrypy.request object itself doesn't change between requests
+        # Therefore, use a random attribute which does change
+        return self._generate_id(cherrypy.request.run)
