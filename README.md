@@ -8,9 +8,8 @@ A live profiling tool for cherrypy & sqlalchemy
 * Backend:
   * Request id doesn't change
 * Frontend
-  * Request display
-  * Display switching
   * SQL aggregating
+  * Request aggregating
   * Improve styling
   * Filtering
   * Linking to specific rows
