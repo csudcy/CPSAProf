@@ -119,7 +119,6 @@ function CPSADataStore() {
     this._add_record = function(record) {
         // record.order = Object.keys(this._store[record.type]).length + 1;
         this._store[record.type][record.id] = record;
-        console.log('add', record.id, record.order);
         this.publish('add_' + record.type, record);
         this._update_orders(record.type);
     }.bind(this);
@@ -131,14 +130,12 @@ function CPSADataStore() {
         }
         // record.order = this._store[record.type][record.id].order;
         this._store[record.type][record.id] = record;
-        console.log('update', record.id, record.order);
         this.publish('update_' + record.type, record);
         this._update_orders(record.type);
     }.bind(this);
 
     this._update_orders = function(type) {
         // Update the order attibute of all rows
-        console.log('_update_orders', type);
         var records = Object.values(this._store[type]);
         records.sort(function (a, b){
             return a.created - b.created;
@@ -154,9 +151,6 @@ function CPSADataStore() {
                 this.publish('update_' + type, record);
             }
         }.bind(this));
-        records.forEach(function(record, index) {
-            console.log(index, record.id, record.order, record.relative_created);
-        });
     }.bind(this);
 
     this.listen = function(cpsa_client) {
@@ -215,6 +209,39 @@ function CPSASqlAggregator() {
 add_events(CPSASqlAggregator, ['add', 'update', 'clear']);
 
 
+// function CPSAViewMixin(klass, type) {
+
+//     this._container = undefined;
+//     this._datatable = undefined;
+
+//     this.listen = function(cpsa_datastore) {
+//         this._cpsa_datastore = cpsa_datastore;
+//         cpsa_datastore.subscribe('add_sql', this._on_add_sql);
+//         cpsa_datastore.subscribe('update_sql', this._on_update_sql);
+//         cpsa_datastore.subscribe('clear', this._on_clear);
+//     }.bind(this);
+
+//     this._on_add_sql = function(data) {
+//         if (this._datatable === undefined) return;
+//         this._datatable.row.add(data);
+//         this._datatable.draw();
+//     }.bind(this);
+
+//     this._on_update_sql = function(data) {
+//         if (this._datatable === undefined) return;
+//         this._datatable.row('#' + data.id).data(data);
+//         this._datatable.draw();
+//     }.bind(this);
+
+//     this._on_clear = function() {
+//         if (this._datatable === undefined) return;
+//         this._datatable.clear();
+//         this._datatable.draw();
+//     }.bind(this);
+
+// }
+
+
 function CPSASqlView() {
     this._container = undefined;
     this._datatable = undefined;
@@ -227,27 +254,34 @@ function CPSASqlView() {
     }.bind(this);
 
     this._on_add_sql = function(data) {
+        if (this._datatable === undefined) return;
         this._datatable.row.add(data);
         this._datatable.draw();
     }.bind(this);
 
     this._on_update_sql = function(data) {
+        if (this._datatable === undefined) return;
         this._datatable.row('#' + data.id).data(data);
         this._datatable.draw();
     }.bind(this);
 
     this._on_clear = function() {
+        if (this._datatable === undefined) return;
         this._datatable.clear();
         this._datatable.draw();
     }.bind(this);
 
     this.display = function(container) {
+        if (this._datatable !== undefined) {
+            console.log('Tried to display CPSASqlView when it is already displayed!');
+            return;
+        }
+        this._container = container;
         function nice_duration_seconds(seconds) {
             return (Math.floor(seconds * 100) / 100.0) + 's';
         }
-        this._container = container;
-        this._datatable = this._container.DataTable({
-            data: this._cpsa_datastore.get('sql'),
+        this._datatable = container.DataTable({
+            data: this._cpsa_datastore.get_all('sql'),
             rowId: 'id',
             autoWidth: true,
             order: [[0, 'desc']],
@@ -255,40 +289,126 @@ function CPSASqlView() {
                 {
                     title: 'Index',
                     data: 'order'
-                },
-                {
+                }, {
                     title: 'Id',
                     data: 'id'
-                },
-                {
+                }, {
                     title: 'Created',
                     data: 'relative_created',
                     render: {display: nice_duration_seconds}
-                },
-                {
+                }, {
                     title: 'Duration',
                     data: 'duration',
                     render: {display: nice_duration_seconds}
-                },
-                {
+                }, {
                     title: 'Query',
                     data: 'data.statement'
-                },
-                {
+                }, {
                     title: 'Parameters',
                     data: 'data.parameters[, ]'
-                },
-                {
+                }, {
                     title: 'Request',
                     data: 'data.request_id'
-                },
+                }
             ]
         });
     }.bind(this);
 
     this.remove = function() {
-        // this._container.DataTable('destroy');
+        if (this._datatable === undefined) {
+            console.log('Tried to remove CPSASqlView when it has not been displayed!');
+            return;
+        }
         this._datatable.destroy();
+        this._container.empty();
+        this._datatable = undefined;
+        this._container = undefined;
+    }.bind(this);
+}
+
+
+function CPSARequestView() {
+    this._container = undefined;
+    this._datatable = undefined;
+
+    this.listen = function(cpsa_datastore) {
+        this._cpsa_datastore = cpsa_datastore;
+        cpsa_datastore.subscribe('add_request', this._on_add_request);
+        cpsa_datastore.subscribe('update_request', this._on_update_request);
+        cpsa_datastore.subscribe('clear', this._on_clear);
+    }.bind(this);
+
+    this._on_add_request = function(data) {
+        console.log(data);
+        if (this._datatable === undefined) return;
+        this._datatable.row.add(data);
+        this._datatable.draw();
+    }.bind(this);
+
+    this._on_update_request = function(data) {
+        if (this._datatable === undefined) return;
+        this._datatable.row('#' + data.id).data(data);
+        this._datatable.draw();
+    }.bind(this);
+
+    this._on_clear = function() {
+        if (this._datatable === undefined) return;
+        this._datatable.clear();
+        this._datatable.draw();
+    }.bind(this);
+
+    this.display = function(container) {
+        if (this._datatable !== undefined) {
+            console.log('Tried to display CPSARequestView when it is already displayed!');
+            return;
+        }
+        this._container = container;
+        function nice_duration_seconds(seconds) {
+            return (Math.floor(seconds * 100) / 100.0) + 's';
+        }
+        this._datatable = container.DataTable({
+            data: this._cpsa_datastore.get_all('request'),
+            rowId: 'id',
+            autoWidth: true,
+            order: [[0, 'desc']],
+            columns: [
+                {
+                    title: 'Index',
+                    data: 'order'
+                }, {
+                    title: 'Id',
+                    data: 'id'
+                }, {
+                    title: 'Created',
+                    data: 'relative_created',
+                    render: {display: nice_duration_seconds}
+                }, {
+                    title: 'Duration',
+                    data: 'duration',
+                    render: {display: nice_duration_seconds}
+                },
+                // {
+                //     title: 'Query',
+                //     data: 'data.statement'
+                // }, {
+                //     title: 'Parameters',
+                //     data: 'data.parameters[, ]'
+                // }, {
+                //     title: 'Request',
+                //     data: 'data.request_id'
+                // },
+            ]
+        });
+    }.bind(this);
+
+    this.remove = function() {
+        if (this._datatable === undefined) {
+            console.log('Tried to remove CPSARequestView when it has not been displayed!');
+            return;
+        }
+        this._datatable.destroy();
+        this._container.empty();
+        this._datatable = undefined;
         this._container = undefined;
     }.bind(this);
 }
@@ -296,12 +416,14 @@ function CPSASqlView() {
 
 var cpsa_client = new CPSAClient(),
     cpsa_datastore = new CPSADataStore(),
-    cpsa_sql_aggregator = new CPSASqlAggregator(),
-    cpsa_sql_view = new CPSASqlView();
+    // cpsa_sql_aggregator = new CPSASqlAggregator(),
+    cpsa_sql_view = new CPSASqlView(),
+    cpsa_request_view = new CPSARequestView();
 
 cpsa_datastore.listen(cpsa_client);
 // cpsa_sql_aggregator.listen(cpsa_datastore);
 cpsa_sql_view.listen(cpsa_datastore);
+cpsa_request_view.listen(cpsa_datastore);
 
 $(function() {
     $('#start').click(cpsa_client.start);
@@ -330,5 +452,22 @@ $(function() {
         $('#clear').prop("disabled", false);
     });
 
-    cpsa_sql_view.display($('#container'));
+    // VIEWS
+
+    $('#view_sql').click(show_view.bind(this, cpsa_sql_view));
+    $('#view_request').click(show_view.bind(this, cpsa_request_view));
+
+    var _current_view;
+    function show_view(view) {
+        // If the view is already displayed, do nothing
+        if (_current_view == view) return;
+
+        if (_current_view !== undefined) {
+            _current_view.remove();
+        }
+        view.display($('#container'));
+        _current_view = view;
+    }
+
+    show_view(cpsa_sql_view);
 });
