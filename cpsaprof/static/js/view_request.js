@@ -1,7 +1,7 @@
 /*global nice_duration_seconds*/
 /*global CPSAViewFactory*/
 
-function CPSARequestViewSettings() {
+function CPSAViewRequestSettings() {
     return {
         data: this._cpsa_datastore.get_all('request'),
         rowId: 'id',
@@ -41,4 +41,4 @@ function CPSARequestViewSettings() {
         ]
     };
 }
-var CPSARequestView = CPSAViewFactory('request', CPSARequestViewSettings);
+var CPSAViewRequest = CPSAViewFactory('request', CPSAViewRequestSettings);

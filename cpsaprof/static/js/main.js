@@ -1,19 +1,19 @@
 /*global $*/
 /*global CPSAClient*/
 /*global CPSADataStore*/
-/*global CPSASqlView*/
-/*global CPSARequestView*/
+/*global CPSAViewSql*/
+/*global CPSAViewRequest*/
 
 var cpsa_client = new CPSAClient(),
     cpsa_datastore = new CPSADataStore(),
     // cpsa_sql_aggregator = new CPSASqlAggregator(),
-    cpsa_sql_view = new CPSASqlView(),
-    cpsa_request_view = new CPSARequestView();
+    cpsa_view_sql = new CPSAViewSql(),
+    cpsa_view_request = new CPSAViewRequest();
 
 cpsa_datastore.listen(cpsa_client);
 // cpsa_sql_aggregator.listen(cpsa_datastore);
-cpsa_sql_view.listen(cpsa_datastore);
-cpsa_request_view.listen(cpsa_datastore);
+cpsa_view_sql.listen(cpsa_datastore);
+cpsa_view_request.listen(cpsa_datastore);
 
 $(function() {
     $('#start').click(cpsa_client.start);
@@ -44,8 +44,8 @@ $(function() {
 
     // VIEWS
 
-    $('#view_sql').click(show_view.bind(this, cpsa_sql_view));
-    $('#view_request').click(show_view.bind(this, cpsa_request_view));
+    $('#view_sql').click(show_view.bind(this, cpsa_view_sql));
+    $('#view_request').click(show_view.bind(this, cpsa_view_request));
 
     var _current_view;
     function show_view(view) {
@@ -59,5 +59,5 @@ $(function() {
         _current_view = view;
     }
 
-    show_view(cpsa_sql_view);
+    show_view(cpsa_view_sql);
 });

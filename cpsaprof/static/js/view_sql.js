@@ -1,7 +1,7 @@
 /*global nice_duration_seconds*/
 /*global CPSAViewFactory*/
 
-function CPSASqlViewSettings() {
+function CPSAViewSqlSettings() {
     return {
         data: this._cpsa_datastore.get_all('sql'),
         rowId: 'id',
@@ -35,4 +35,4 @@ function CPSASqlViewSettings() {
         ]
     };
 }
-var CPSASqlView = CPSAViewFactory('sql', CPSASqlViewSettings);
+var CPSAViewSql = CPSAViewFactory('sql', CPSAViewSqlSettings);
