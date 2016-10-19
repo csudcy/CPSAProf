@@ -44,11 +44,11 @@ $(function() {
 
     // VIEWS
 
-    $('#view_sql').click(show_view.bind(this, cpsa_view_sql));
-    $('#view_request').click(show_view.bind(this, cpsa_view_request));
+    $('#view_sql').click(show_view.bind(this, cpsa_view_sql, '#view_sql'));
+    $('#view_request').click(show_view.bind(this, cpsa_view_request, '#view_request'));
 
     var _current_view;
-    function show_view(view) {
+    function show_view(view, button_selector) {
         // If the view is already displayed, do nothing
         if (_current_view == view) return;
 
@@ -57,7 +57,12 @@ $(function() {
         }
         view.display($('#container'));
         _current_view = view;
+
+        $('.view_selected').removeClass('view_selected');
+        console.log(button_selector);
+        console.log($(button_selector));
+        $(button_selector).addClass('view_selected');
     }
 
-    show_view(cpsa_view_sql);
+    show_view(cpsa_view_sql, '#view_sql');
 });

@@ -5,10 +5,7 @@ A live profiling tool for cherrypy & sqlalchemy
 
 ## TODO
 
-* Backend:
-  * Request id differs between requests & sql queries
 * Frontend
-  * Improve display switcher styling
   * SQL aggregating
   * Request aggregating
   * Improve styling
