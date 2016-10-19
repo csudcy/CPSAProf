@@ -6,8 +6,9 @@ A live profiling tool for cherrypy & sqlalchemy
 ## TODO
 
 * Backend:
-  * Request id doesn't change
+  * Request id differs between requests & sql queries
 * Frontend
+  * Improve display switcher styling
   * SQL aggregating
   * Request aggregating
   * Improve styling
@@ -20,6 +21,8 @@ A live profiling tool for cherrypy & sqlalchemy
       * Link to request
     * Grouped SQL
       * Expand to see SQL?
+    * Grouped requests?
+      * Expand to see requests?
   * Stop on error
   * Choose to start with or without old data
   * Pause?
