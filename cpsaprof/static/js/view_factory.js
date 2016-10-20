@@ -4,11 +4,11 @@ function CPSAViewFactory(type, settings_function) {
         this._container = undefined;
         this._datatable = undefined;
 
-        this.listen = function(cpsa_datastore) {
-            this._cpsa_datastore = cpsa_datastore;
-            cpsa_datastore.subscribe('add_' + type, this._on_add_data);
-            cpsa_datastore.subscribe('update_' + type, this._on_update_data);
-            cpsa_datastore.subscribe('clear', this._on_clear);
+        this.listen = function(datastore) {
+            this._datastore = datastore;
+            datastore.subscribe('add_' + type, this._on_add_data);
+            datastore.subscribe('update_' + type, this._on_update_data);
+            datastore.subscribe('clear', this._on_clear);
         }.bind(this);
 
         this._on_add_data = function(data) {

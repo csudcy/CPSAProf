@@ -3,7 +3,7 @@
 
 function CPSAViewRequestSettings() {
     return {
-        data: this._cpsa_datastore.get_all('request'),
+        data: this._datastore.get_all('request'),
         rowId: 'id',
         autoWidth: true,
         order: [[0, 'desc']],

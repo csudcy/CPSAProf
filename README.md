@@ -6,11 +6,10 @@ A live profiling tool for cherrypy & sqlalchemy
 ## TODO
 
 * Frontend
-  * SQL aggregating
   * Request aggregating
   * Improve styling
   * Filtering
-  * Display modes:
+  * Improve display modes:
     * Requests
       * Expand to see SQL
     * SQL

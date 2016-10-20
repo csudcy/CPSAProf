@@ -4,7 +4,7 @@
 
 function CPSAViewSqlSettings() {
     return {
-        data: this._cpsa_datastore.get_all('sql'),
+        data: this._datastore.get_all('sql'),
         rowId: 'id',
         autoWidth: true,
         order: [[0, 'desc']],

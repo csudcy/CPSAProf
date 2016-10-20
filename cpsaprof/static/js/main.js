@@ -1,20 +1,24 @@
 /*global $*/
 /*global CPSAClient*/
 /*global CPSADataStore*/
+/*global CPSAAggregatorSql*/
 /*global CPSAViewSql*/
 /*global CPSAViewRequest*/
+/*global CPSAViewSqlAggregated*/
 
 var cpsa_client = new CPSAClient(),
     cpsa_datastore = new CPSADataStore(),
-    // cpsa_sql_aggregator = new CPSASqlAggregator(),
+    cpsa_aggregator_sql = new CPSAAggregatorSql(),
     cpsa_view_sql = new CPSAViewSql(),
-    cpsa_view_request = new CPSAViewRequest();
+    cpsa_view_request = new CPSAViewRequest(),
+    cpsa_view_sql_aggregated = new CPSAViewSqlAggregated();
 
 cpsa_datastore.listen(cpsa_client);
-// cpsa_sql_aggregator.listen(cpsa_datastore);
+cpsa_aggregator_sql.listen(cpsa_datastore);
+
 cpsa_view_sql.listen(cpsa_datastore);
 cpsa_view_request.listen(cpsa_datastore);
-
+cpsa_view_sql_aggregated.listen(cpsa_aggregator_sql);
 
 function add_control_handlers() {
     $('#start').click(cpsa_client.start);
@@ -49,6 +53,7 @@ var _current_view;
 var VIEWS = {
     sql: cpsa_view_sql,
     request: cpsa_view_request,
+    sql_aggregated: cpsa_view_sql_aggregated,
 };
 function show_view(type, search) {
     // If the view is already displayed, do nothing

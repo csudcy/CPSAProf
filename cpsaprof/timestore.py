@@ -16,19 +16,20 @@ class TimeStore(object):
         self._last_cleanup = 0
 
     def update(self, id, data):
+        current_time = time.time()
         if id not in self._store:
             # New record; add it
             self._store[id] = {
                 'id': id,
                 'type': self._type,
                 'data': data,
-                'created': time.time(),
-                'updated': time.time(),
+                'created': current_time,
+                'updated': current_time,
             }
         else:
             # Existing record; update it
             self._store[id]['data'] = self._update_data(self._store[id]['data'], data)
-            self._store[id]['updated'] = time.time()
+            self._store[id]['updated'] = current_time
 
         # Return whatever the latest version of the record is
         return self._store[id]
