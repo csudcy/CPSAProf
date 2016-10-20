@@ -10,7 +10,6 @@ A live profiling tool for cherrypy & sqlalchemy
   * Request aggregating
   * Improve styling
   * Filtering
-  * Linking to specific rows
   * Display modes:
     * Requests
       * Expand to see SQL

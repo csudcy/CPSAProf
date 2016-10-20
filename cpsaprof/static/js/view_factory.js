@@ -32,13 +32,17 @@ function CPSAViewFactory(type, settings_function) {
             this._datatable.columns.adjust();
         }.bind(this);
 
-        this.display = function(container) {
+        this.display = function(container, search) {
             if (this._datatable !== undefined) {
                 console.log('Tried to display CPSAView when it is already displayed!');
                 return;
             }
             this._container = container;
             this._datatable = container.DataTable(settings_function.call(this));
+            if (search) {
+                this._datatable.search(search);
+                this._datatable.draw();
+            }
         }.bind(this);
 
         this.remove = function() {

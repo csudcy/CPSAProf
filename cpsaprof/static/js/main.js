@@ -15,7 +15,8 @@ cpsa_datastore.listen(cpsa_client);
 cpsa_view_sql.listen(cpsa_datastore);
 cpsa_view_request.listen(cpsa_datastore);
 
-$(function() {
+
+function add_control_handlers() {
     $('#start').click(cpsa_client.start);
     $('#stop').click(cpsa_client.stop);
     $('#clear').click(cpsa_datastore.clear);
@@ -41,28 +42,44 @@ $(function() {
     cpsa_datastore.subscribe('add_request', function(data) {
         $('#clear').prop("disabled", false);
     });
+}
 
-    // VIEWS
 
-    $('#view_sql').click(show_view.bind(this, cpsa_view_sql, '#view_sql'));
-    $('#view_request').click(show_view.bind(this, cpsa_view_request, '#view_request'));
+var _current_view;
+var VIEWS = {
+    sql: cpsa_view_sql,
+    request: cpsa_view_request,
+};
+function show_view(type, search) {
+    // If the view is already displayed, do nothing
+    var view = VIEWS[type];
+    if (_current_view == view) return;
 
-    var _current_view;
-    function show_view(view, button_selector) {
-        // If the view is already displayed, do nothing
-        if (_current_view == view) return;
-
-        if (_current_view !== undefined) {
-            _current_view.remove();
-        }
-        view.display($('#container'));
-        _current_view = view;
-
-        $('.view_selected').removeClass('view_selected');
-        console.log(button_selector);
-        console.log($(button_selector));
-        $(button_selector).addClass('view_selected');
+    if (_current_view !== undefined) {
+        _current_view.remove();
     }
+    view.display($('#container'), search);
+    _current_view = view;
 
-    show_view(cpsa_view_sql, '#view_sql');
+    $('.view_selected').removeClass('view_selected');
+    $(`#view_${type}`).addClass('view_selected');
+}
+
+
+function add_link_handlers() {
+    $(document).on('click', '.view_link', function(e) {
+        // Don't go anywhere...
+        e.preventDefault();
+        e.stopPropagation();
+
+        var $el = $(this);
+        show_view($el.data('type'), $el.data('id'));
+    });
+}
+
+
+$(function() {
+    add_control_handlers();
+    add_link_handlers();
+    show_view('sql');
 });

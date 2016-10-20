@@ -35,3 +35,8 @@ function add_events(target, event_list) {
 function nice_duration_seconds(seconds) {
     return (Math.floor(seconds * 100) / 100.0) + 's';
 }
+
+
+function linkify(type, id) {
+    return `<a href="#" data-type="${type}" data-id="${id}" class="view_link">${id}</a>`;
+}

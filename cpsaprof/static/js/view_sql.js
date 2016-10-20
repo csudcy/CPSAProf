@@ -1,4 +1,5 @@
 /*global nice_duration_seconds*/
+/*global linkify*/
 /*global CPSAViewFactory*/
 
 function CPSAViewSqlSettings() {
@@ -30,7 +31,8 @@ function CPSAViewSqlSettings() {
                 data: 'data.parameters[, ]'
             }, {
                 title: 'Request',
-                data: 'data.request_id'
+                data: 'data.request_id',
+                render: {display: linkify.bind(null, 'request')}
             }
         ]
     };
